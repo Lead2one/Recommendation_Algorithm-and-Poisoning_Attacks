@@ -1,4 +1,4 @@
-# Recommendation-Algorithm
+# Recommendation_Algorithm-and-Poisoning_Attacks
 该仓库用于存放基于'深度学习的推荐算法的投毒攻击研究'的相关代码，包含对不同推荐算法的复现以及对应的投毒攻击的相关代码复现.
 
 
