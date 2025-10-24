@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投毒攻击演示平台</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script type="module" src="{{ url_for('static', filename='start.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='index.js') }}"></script>
+    <link rel="icon" href="..\static\resource\image\poisoning.svg" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class = "main">
+        <div class = "leftTD">
+            <button class="modeButton" type="button">演示模式</button>
+            <button class="modeButton" type="button" onclick="alert('开发中...')">对比模式</button>
+            <div class = "something"></div>
+        </div>
+
+        <div class="content">
+            <div class="optionsBox">
+                <div class="optionsline">
+                    <div class="icon start-icon" id = "start"></div>
+                    <div class="icon pause-icon" id = "pause" style="display: none;"></div>
+                    <div class="option">
+                        <label class="option_label" for="dataset">数据集</label>
+                        <select id="dataset">
+                            <option value="ml-100k">ml-100k</option>
+                            <option value="ml-1M">ml-1M</option>
+                            <option value="douban">豆瓣评分</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label class="option_label" for="model_name">推荐算法</label>
+                        <select id="model_name">
+                            <option value="GMF">GMF</option>
+                            <option value="LightGCN">LightGCN</option>
+                            <option value="NCF">NCF</option>
+                            <option value="NCL">NCL</option>
+                            <option value="NGCF">NGCF</option>
+                            <option value="SGL">SGL</option>
+                            <option value="SimGCL">SimGCL</option>
+                            <option value="SSL4Rec">SSL4Rec</option>
+                            <option value="WRMF">WRMF</option>
+                            <option value="XSimGCL">XSimGCL</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label class="option_label" for="maxEpoch">训练轮次</label>
+                        <input type="number" id="maxEpoch" name="maxEpoch" min="1" max="99" value="30">
+                    </div>
+                    <div class="option">
+                        <label class="option_label" for="attackCategory">攻击模型</label>
+                        <select id="attackCategory">
+                            <option value="Black">黑盒 (Black)</option>
+                            <option value="Gray">灰盒 (Gray)</option>
+                            <option value="White">白盒 (White)</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label class="option_label" for="attackModelName"></label>
+                        <select id="attackModelName">
+                            <option value="BandwagonAttack">BandwagonAttack</option>
+                            <option value="GSPAttack">GSPAttack</option>
+                            <option value="GTA">GTA</option>
+                            <option value="NoneAttack">NoneAttack</option>
+                            <option value="PoisonRec">PoisonRec</option>
+                            <option value="RandomAttack">RandomAttack</option>
+                            <option value="RLAttack">RLAttack</option>
+                        </select>
+                    </div>
+                    <div id="moreToggle" class = "moreToggle"></div>
+                </div>
+
+                <div id="moreOptions">
+                    <hr>
+                    <label style="font-size: medium;"><h3 class = "head">Recommend</h3></label>
+                    <div class="optionsline">
+                        <div class="option">
+                            <label class="option_label" for="lRate">学习步长</label>
+                            <input type="number" id="lRate" value="0.005" step="0.001">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="batch_size">批处理大小</label>
+                            <input type="number" id="batch_size" min="1" max="65535" value="2048">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="n_layers">GNN层数</label>
+                            <input type="number" id="n_layers" min="1" max="99" value="2">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="seed">随机种子</label>
+                            <input type="number" id="seed" min="1" max="65535" value="2024">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="topK">推荐列表长度</label>
+                            <input type="number" id="topK" min="1" max="255" value="50">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="dropout">减少过拟合</label>
+                            <input type="checkbox" id="dropout" checked>
+                        </div>
+                    </div>
+                    <hr>
+                    <label style="font-size: medium;"><h3 class = "head">Attack</h3></label>
+                    <div class="optionsline">
+                        <div class="option">
+                            <label class="option_label" for="maliciousUserSize">投毒比例</label>
+                            <input type="number" id="maliciousUserSize" value="0.01" step="0.001">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="maliciousFeedbackSize">反馈数量</label>
+                            <input type="number" id="maliciousFeedbackSize" min="1" max="99" value="0">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="Epoch">迭代次数</label>
+                            <input type="number" id="Epoch" min="1" max="99" value="5">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="innerEpoch">外部迭代次数</label>
+                            <input type="number" id="innerEpoch" min="1" max="99" value="6">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="outerEpoch">内部迭代次数</label>
+                            <input type="number" id="outerEpoch" min="1" max="99" value="2">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="gradMaxLimitation">梯度最大值</label>
+                            <input type="number" id="gradMaxLimitation" min="1" max="99" value="1">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="gradNumLimitation">梯度最大变化数量</label>
+                            <input type="number" id="gradNumLimitation" min="1" max="99" value="60">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="gradIterationNum">梯度最大迭代次数</label>
+                            <input type="number" id="gradIterationNum" min="1" max="99" value="10">
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="attackTargetChooseWay">目标攻击的模式</label>
+                            <select id="attackTargetChooseWay">
+                                <option value="random">random</option>
+                                <option value="popular">popular</option>
+                                <option value="unpopular" selected>unpopular</option>
+                            </select>
+                        </div>
+                        <div class="option">
+                            <label class="option_label" for="targetSize">目标攻击的大小</label>
+                            <input type="number" id="targetSize" min="1" max="99" value="5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class = "train-box">
+                <div class="current-train">
+                    <div class="lossbox">
+                        <h3 class="c-spit">实时训练进度</h3>
+                        <div class = "loss">
+                            <svg id="loss-clean"></svg>
+                            <svg id="loss-poisoned"></svg>
+                        </div>
+                    </div>
+                    <hr class="spit">
+                    <div class = "parameter">
+                        <h3 class="c-spit">参数显示</h3>
+                        <div class = "parameter-disp" id="parameter-disp">
+
+                        </div>
+                    </div>
+                </div>
+                <div class = "result-box">
+                    <div class= "value-analysis">
+                        <h3 class = "head">指标对比</h3>
+                        
+                        <svg id="result_svg"></svg>
+                    </div>
+                    <hr class="spit">
+                    <div class = "language" id ="language">
+                        <h3 class = "head" id = "AIhead">AI评估</h3>
+                        <div class = "assessment" id = "assessment">
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class ="final-output">
+                    <div class="numbers">
+                        <h3 class = "head">指标数值</h3>
+                        <div id="result_num"></div>
+                    </div>
+                    <hr class="spit">
+                    <div class="time">
+                        <h3 class = "head">运行时长</h3>
+                        <div class="total-time" id = "total time"></div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="introduction">
+                <h2>网站介绍</h2>
+                <p>本网站是基于已有的推荐算法与对应的投毒攻击进行模拟攻击演示的Web端网站，用户可借助本网站，选取合适的数据集并修改对应参数进行演示。</p>
+                <p>用户可以将不同推荐算法以及投毒攻击方法进行组合，探究它们之间的指标变化;当用户对其评估后，也可藉由AI大语言模型进行辅助评估。</p>
+            </div>
+        </div>
+    </div>
+
+
+
+</body>
+
+</html>
